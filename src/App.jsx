@@ -8,14 +8,13 @@ import { motion } from "framer-motion"
 function SnowField({ count = 350 }) {
   const ref = useRef()
 
-  // Positions & speeds are memoized so they survive StrictMode re-renders
   const particles = useMemo(() => {
     const positions = new Float32Array(count * 3)
     const speeds = new Float32Array(count)
     for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 40
-      positions[i * 3 + 1] = Math.random() * 20 + 10
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 40
+      positions[i * 3] = (Math.random() - 0.5) * 60
+      positions[i * 3 + 1] = Math.random() * 30
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 60
       speeds[i] = 0.03 + Math.random() * 0.05
     }
     return { positions, speeds }
@@ -25,9 +24,8 @@ function SnowField({ count = 350 }) {
     const positions = ref.current.geometry.attributes.position.array
     for (let i = 0; i < count; i++) {
       positions[i * 3 + 1] -= particles.speeds[i]
-      // Reset to the top once a flake reaches the ground
       if (positions[i * 3 + 1] < -4) {
-        positions[i * 3 + 1] = 20 + Math.random() * 5
+        positions[i * 3 + 1] = 25 + Math.random() * 5
       }
     }
     ref.current.geometry.attributes.position.needsUpdate = true
@@ -43,9 +41,9 @@ function SnowField({ count = 350 }) {
       </bufferGeometry>
       <pointsMaterial
         color="rgb(255, 255, 255)"
-        size={0.15}
+        size={0.18}
         transparent
-        opacity={0.8}
+        opacity={0.9}
         sizeAttenuation
       />
     </points>
@@ -82,6 +80,8 @@ function IceCrystalCluster({ count = 40, radius = 4, colors }) {
           <icosahedronGeometry args={[1, 0]} />
           <meshStandardMaterial
             color={c.color}
+            emissive={c.color}
+            emissiveIntensity={0.35}
             transparent
             opacity={0.85}
             wireframe
@@ -131,9 +131,11 @@ function HolographicPanels({ count = 6, size = 1.8 }) {
         <mesh key={p.key} position={p.position} rotation={p.rotation} scale={p.scale}>
           <boxGeometry args={[size, 0.3, size]} />
           <meshStandardMaterial
-            color="rgb(200, 230, 255)"
+            color="rgb(120, 200, 255)"
+            emissive="rgb(80, 160, 230)"
+            emissiveIntensity={0.6}
             transparent
-            opacity={0.55}
+            opacity={0.65}
             metalness={0.8}
             roughness={0.1}
           />
@@ -143,113 +145,189 @@ function HolographicPanels({ count = 6, size = 1.8 }) {
   )
 }
 
+// === HTML overlay (hero content) ===
+
+function Overlay() {
+  return (
+    <div className="pointer-events-none fixed inset-0 z-10 flex flex-col justify-between p-6 sm:p-10">
+      <header className="flex items-start justify-between">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <h1 className="text-lg font-bold tracking-[0.25em] text-sky-100 sm:text-xl">
+            ETHAN OREKAN
+          </h1>
+          <p className="mt-1 text-[10px] tracking-[0.4em] text-sky-400/80 sm:text-xs">
+            PORTFOLIO
+          </p>
+        </motion.div>
+        <motion.nav
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="hidden gap-8 text-sm text-sky-200/80 sm:flex"
+        >
+          <a className="transition-colors hover:text-white" href="#competences">Compétences</a>
+          <a className="transition-colors hover:text-white" href="#projets">Projets</a>
+          <a className="transition-colors hover:text-white" href="#contact">Contact</a>
+        </motion.nav>
+      </header>
+
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1.2, delay: 0.4 }}
+        className="mx-auto max-w-3xl text-center"
+      >
+        <h2 className="text-4xl font-black leading-tight text-white drop-shadow-[0_0_25px_rgba(100,180,255,0.35)] sm:text-6xl">
+          Bienvenue dans
+          <br />
+          mon igloo
+        </h2>
+        <p className="mx-auto mt-5 max-w-xl text-sm text-sky-200/80 sm:text-base">
+          Développeur web — un portfolio sculpté dans la glace,
+          construit avec React, Three.js et beaucoup de neige.
+        </p>
+      </motion.div>
+
+      <motion.footer
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1, delay: 1.2 }}
+        className="text-center text-[10px] tracking-[0.35em] text-sky-300/60 sm:text-xs"
+      >
+        GLISSEZ POUR EXPLORER LA SCÈNE
+      </motion.footer>
+    </div>
+  )
+}
+
 // === Main scene ===
 
 export default function App() {
   return (
-    <Canvas
-      gl={{ antialias: true, alpha: true }}
-      camera={{ position: [0, 0, 18], fov: 55 }}
-      dpr={Math.min(window.devicePixelRatio, 2)}
-      style={{ position: "fixed", inset: 0 }}
-    >
-      <fog attach="fog" near={20} far={60} color="rgb(245, 250, 255)" />
+    <>
+      <Canvas
+        gl={{ antialias: true, alpha: false }}
+        camera={{ position: [0, 0, 18], fov: 55 }}
+        dpr={Math.min(window.devicePixelRatio, 2)}
+      >
+        {/* Arctic night sky */}
+        <color attach="background" args={["#0a192f"]} />
+        <fog attach="fog" args={["#0a192f", 25, 90]} />
 
-      {/* Snowy ground */}
-      <mesh position={[0, -4, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[100, 100]} />
-        <meshStandardMaterial color="rgb(248, 250, 255)" transparent opacity={0.96} />
-      </mesh>
+        {/* Lights */}
+        <ambientLight intensity={0.5} />
+        <hemisphereLight args={["#7fb4ff", "#0a192f", 0.6]} />
+        <pointLight
+          position={[0, 4, 2]}
+          intensity={40}
+          color="rgb(150, 220, 255)"
+          distance={40}
+          decay={2}
+        />
 
-      {/* Distant mountains */}
-      <group rotation={[-0.15, 0, 0]} position={[-10, -1, -20]}>
-        <mesh>
-          <boxGeometry args={[15, 2.5, 15]} />
-          <meshStandardMaterial color="rgb(225, 232, 242)" flatShading />
+        {/* Snowy ground */}
+        <mesh position={[0, -4, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[200, 200]} />
+          <meshStandardMaterial color="rgb(226, 238, 252)" roughness={0.9} />
         </mesh>
-      </group>
-      <group rotation={[-0.15, 0, 0]} position={[10, -1.2, -22]}>
-        <mesh>
-          <boxGeometry args={[12, 2.8, 12]} />
+
+        {/* Distant mountains (dark silhouettes) */}
+        <mesh position={[-14, -3, -30]} rotation={[-0.15, 0, 0]}>
+          <boxGeometry args={[22, 9, 22]} />
+          <meshStandardMaterial color="rgb(22, 50, 82)" flatShading />
         </mesh>
-      </group>
+        <mesh position={[13, -3.5, -35]} rotation={[-0.15, 0.3, 0]}>
+          <boxGeometry args={[18, 10, 18]} />
+          <meshStandardMaterial color="rgb(18, 42, 70)" flatShading />
+        </mesh>
+        <mesh position={[0, -4, -45]} rotation={[0, 0.6, 0]}>
+          <boxGeometry args={[30, 12, 20]} />
+          <meshStandardMaterial color="rgb(14, 34, 58)" flatShading />
+        </mesh>
 
-      {/* Main igloo dome (BackSide so the camera sits inside) */}
-      <mesh position={[0, -0.8, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <icosahedronGeometry args={[5, 1]} />
-        <meshStandardMaterial
-          color="rgb(255, 255, 255)"
-          transparent
-          opacity={0.96}
-          side="BackSide"
+        {/* Main igloo dome (camera sits inside) */}
+        <mesh position={[0, -0.8, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <icosahedronGeometry args={[5, 1]} />
+          <meshStandardMaterial
+            color="rgb(235, 245, 255)"
+            transparent
+            opacity={0.97}
+            side="BackSide"
+            roughness={0.6}
+          />
+        </mesh>
+
+        {/* Igloo wireframe texture */}
+        <mesh position={[0, -0.8, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <icosahedronGeometry args={[5.3, 1]} />
+          <meshStandardMaterial
+            color="rgb(140, 200, 255)"
+            transparent
+            opacity={0.35}
+            side="BackSide"
+            wireframe
+            roughness={0.25}
+          />
+        </mesh>
+
+        {/* Entrance torus */}
+        <mesh position={[0, -1.3, 0]} rotation={[0, Math.PI, 0]}>
+          <torusGeometry args={[2.5, 0.6, 16, 32]} />
+          <meshStandardMaterial color="rgb(240, 245, 255)" roughness={0.5} />
+        </mesh>
+
+        {/* Skill crystals */}
+        <group position={[-8, 0.5, -6]} rotation={[0, 0.2, 0]}>
+          <IceCrystalCluster
+            count={40}
+            radius={4}
+            colors={["#7dd3fc", "#67e8f9", "#a5b4fc"]}
+          />
+        </group>
+
+        {/* Holographic panels */}
+        <group position={[6, 1, -4]} rotation={[0, -0.2, 0]}>
+          <HolographicPanels count={6} size={1.8} />
+        </group>
+
+        {/* Snow */}
+        <SnowField count={350} />
+
+        {/* CTA orb */}
+        <mesh position={[-9, -2.8, 2]}>
+          <torusGeometry args={[0.8, 0.2, 32, 64]} />
+          <meshStandardMaterial
+            color="rgb(110, 210, 255)"
+            emissive="rgb(110, 210, 255)"
+            emissiveIntensity={1.2}
+            roughness={0.4}
+          />
+        </mesh>
+
+        {/* Sections for scroll transitions */}
+        <group id="hero" />
+        <group id="competences" />
+        <group id="projets" />
+        <group id="experiences" />
+        <group id="formations" />
+        <group id="contact" />
+
+        <OrbitControls
+          enablePan={false}
+          autoRotate
+          autoRotateSpeed={0.4}
+          minDistance={7}
+          maxDistance={26}
+          minPolarAngle={Math.PI / 3.5}
+          maxPolarAngle={Math.PI / 2.1}
         />
-      </mesh>
+      </Canvas>
 
-      {/* Igloo wireframe texture */}
-      <mesh position={[0, -0.8, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <icosahedronGeometry args={[5.3, 1]} />
-        <meshStandardMaterial
-          color="rgb(242, 248, 255)"
-          transparent
-          opacity={0.45}
-          side="BackSide"
-          wireframe
-          roughness={0.25}
-        />
-      </mesh>
-
-      {/* Entrance torus */}
-      <mesh position={[0, -1.3, 0]} rotation={[0, Math.PI, 0]}>
-        <torusGeometry args={[2.5, 0.6, 16, 32]} />
-        <meshStandardMaterial color="rgb(240, 245, 255)" transparent opacity={0.97} />
-      </mesh>
-
-      {/* Lights */}
-      <ambientLight color="rgb(140, 220, 255)" intensity={0.35} />
-      <pointLight
-        position={[0, 2, 0]}
-        intensity={1.1}
-        color="rgb(150, 230, 255)"
-        distance={20}
-      />
-
-      {/* Skill crystals */}
-      <group position={[-8, 1, -5]} rotation={[0, 0.2, 0]}>
-        <IceCrystalCluster
-          count={40}
-          radius={4}
-          colors={["hsl(210,80%,65%)", "hsl(180,70%,60%)", "hsl(160,75%,55%)"]}
-        />
-      </group>
-
-      {/* Holographic panels */}
-      <group position={[6, 1, -4]} rotation={[0, -0.2, 0]}>
-        <HolographicPanels count={6} size={1.8} />
-      </group>
-
-      {/* Snow */}
-      <SnowField count={350} />
-
-      {/* CTA orb */}
-      <mesh position={[-9, -4, 0]}>
-        <torusGeometry args={[0.8, 0.2, 32, 64]} />
-        <meshStandardMaterial
-          color="rgb(110, 210, 255)"
-          emissive="rgb(110, 210, 255)"
-          emissiveIntensity={0.5}
-          roughness={0.4}
-        />
-      </mesh>
-
-      {/* Sections for scroll transitions */}
-      <group id="hero" position={[0, 0, 0]} />
-      <group id="competences" position={[0, 0, 0]} />
-      <group id="projets" position={[0, 0, 0]} />
-      <group id="experiences" position={[0, 0, 0]} />
-      <group id="formations" position={[0, 0, 0]} />
-      <group id="contact" position={[0, 0, 0]} />
-
-      <OrbitControls enablePan={false} minDistance={8} maxDistance={30} />
-    </Canvas>
+      <Overlay />
+    </>
   )
 }
