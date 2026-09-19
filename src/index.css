@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ice-snow: #f8f9fa;
+  --ice-glacier: #e4e6e7;
+  --ice-frost: #8d99ae;
+  --ice-glacier-blue: #6c8ebf;
+  --ice-deep-blue: #2c5aa0;
+  --ice-cold-gray: #4a4a5a;
+}
