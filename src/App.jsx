@@ -1,7 +1,49 @@
-import { useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
 import { OrbitControls } from "@react-three/drei"
-import { motion } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
+
+// === Contenu des sections ===
+
+const SECTIONS = {
+  competences: {
+    title: "Compétences",
+    subtitle: "Ce que je sais faire",
+    items: [
+      { name: "React / Next.js", level: 85 },
+      { name: "Three.js / WebGL", level: 70 },
+      { name: "JavaScript / TypeScript", level: 85 },
+      { name: "Node.js", level: 75 },
+      { name: "CSS / Tailwind", level: 80 },
+      { name: "Git / CI-CD", level: 70 },
+    ],
+  },
+  projets: {
+    title: "Projets",
+    subtitle: "Une sélection de réalisations",
+    items: [
+      {
+        name: "Mikey Folio",
+        desc: "Ce portfolio 3D — un igloo interactif construit avec React Three Fiber et Tailwind.",
+        tags: ["React", "Three.js", "Tailwind"],
+      },
+      {
+        name: "À venir",
+        desc: "D'autres projets arrivent bientôt dans cette vitrine. En attendant, glissez dans la neige.",
+        tags: ["Work in progress"],
+      },
+    ],
+  },
+  contact: {
+    title: "Contact",
+    subtitle: "Discutons autour d'un chocolat chaud",
+    items: [
+      { name: "Email", value: "ethan.orekan@example.com", href: "mailto:ethan.orekan@example.com" },
+      { name: "GitHub", value: "github.com/ETHAN026", href: "https://github.com/ETHAN026" },
+      { name: "LinkedIn", value: "linkedin.com/in/ethan-orekan", href: "#" },
+    ],
+  },
+}
 
 // === Snow particle field (animated) ===
 
@@ -50,9 +92,11 @@ function SnowField({ count = 350 }) {
   )
 }
 
-// === Ice crystal cluster (decorative) ===
+// === Ice crystal cluster (cliquable → compétences) ===
 
-function IceCrystalCluster({ count = 40, radius = 4, colors }) {
+function IceCrystalCluster({ count = 40, radius = 4, colors, onOpen }) {
+  const [hovered, setHovered] = useState(false)
+
   const crystals = useMemo(
     () =>
       Array.from({ length: count }, (_, i) => ({
@@ -74,14 +118,29 @@ function IceCrystalCluster({ count = 40, radius = 4, colors }) {
   )
 
   return (
-    <group>
+    <group
+      scale={hovered ? 1.08 : 1}
+      onPointerOver={(e) => {
+        e.stopPropagation()
+        setHovered(true)
+        document.body.style.cursor = "pointer"
+      }}
+      onPointerOut={() => {
+        setHovered(false)
+        document.body.style.cursor = "auto"
+      }}
+      onClick={(e) => {
+        e.stopPropagation()
+        onOpen("competences")
+      }}
+    >
       {crystals.map((c) => (
         <mesh key={c.key} position={c.position} rotation={c.rotation} scale={c.size}>
           <icosahedronGeometry args={[1, 0]} />
           <meshStandardMaterial
             color={c.color}
             emissive={c.color}
-            emissiveIntensity={0.35}
+            emissiveIntensity={hovered ? 0.8 : 0.35}
             transparent
             opacity={0.85}
             wireframe
@@ -94,10 +153,11 @@ function IceCrystalCluster({ count = 40, radius = 4, colors }) {
   )
 }
 
-// === Holographic panels (decorative) ===
+// === Holographic panels (cliquables → projets) ===
 
-function HolographicPanels({ count = 6, size = 1.8 }) {
+function HolographicPanels({ count = 6, size = 1.8, onOpen }) {
   const ref = useRef()
+  const [hovered, setHovered] = useState(false)
 
   useFrame((state) => {
     ref.current.children.forEach((panel, i) => {
@@ -126,16 +186,31 @@ function HolographicPanels({ count = 6, size = 1.8 }) {
   )
 
   return (
-    <group ref={ref}>
+    <group
+      ref={ref}
+      onPointerOver={(e) => {
+        e.stopPropagation()
+        setHovered(true)
+        document.body.style.cursor = "pointer"
+      }}
+      onPointerOut={() => {
+        setHovered(false)
+        document.body.style.cursor = "auto"
+      }}
+      onClick={(e) => {
+        e.stopPropagation()
+        onOpen("projets")
+      }}
+    >
       {panels.map((p) => (
         <mesh key={p.key} position={p.position} rotation={p.rotation} scale={p.scale}>
           <boxGeometry args={[size, 0.3, size]} />
           <meshStandardMaterial
             color="rgb(120, 200, 255)"
             emissive="rgb(80, 160, 230)"
-            emissiveIntensity={0.6}
+            emissiveIntensity={hovered ? 1.2 : 0.6}
             transparent
-            opacity={0.65}
+            opacity={hovered ? 0.85 : 0.65}
             metalness={0.8}
             roughness={0.1}
           />
@@ -145,68 +220,179 @@ function HolographicPanels({ count = 6, size = 1.8 }) {
   )
 }
 
+// === Panneau de section (HTML, glassmorphism) ===
+
+function SectionPanel({ sectionId, onClose }) {
+  const section = SECTIONS[sectionId]
+
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && onClose()
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [onClose])
+
+  return (
+    <AnimatePresence>
+      {section && (
+        <motion.div
+          key={sectionId}
+          initial={{ opacity: 0, y: 60 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 60 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="pointer-events-auto fixed inset-x-4 bottom-4 z-30 mx-auto max-w-xl rounded-2xl border border-sky-400/20 bg-sky-950/85 p-6 shadow-[0_0_60px_rgba(60,140,220,0.25)] backdrop-blur-xl sm:inset-x-8 sm:p-8"
+        >
+          <button
+            onClick={onClose}
+            aria-label="Fermer"
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-sky-400/30 text-sky-300 transition-colors hover:bg-sky-400/20 hover:text-white"
+          >
+            ✕
+          </button>
+
+          <h3 className="text-2xl font-bold text-white">{section.title}</h3>
+          <p className="mt-1 text-xs tracking-widest text-sky-400/80 uppercase">
+            {section.subtitle}
+          </p>
+
+          <div className="mt-5 max-h-[45vh] space-y-4 overflow-y-auto pr-1">
+            {sectionId === "competences" &&
+              section.items.map((item) => (
+                <div key={item.name}>
+                  <div className="mb-1 flex justify-between text-sm text-sky-100">
+                    <span>{item.name}</span>
+                    <span className="text-sky-400">{item.level}%</span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-sky-900/60">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${item.level}%` }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                      className="h-full rounded-full bg-gradient-to-r from-sky-500 to-cyan-300"
+                    />
+                  </div>
+                </div>
+              ))}
+
+            {sectionId === "projets" &&
+              section.items.map((item) => (
+                <div
+                  key={item.name}
+                  className="rounded-xl border border-sky-400/15 bg-sky-900/40 p-4 transition-colors hover:border-sky-400/40"
+                >
+                  <h4 className="font-semibold text-white">{item.name}</h4>
+                  <p className="mt-1 text-sm text-sky-200/75">{item.desc}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {item.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full border border-sky-400/25 px-2.5 py-0.5 text-[11px] text-sky-300"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+            {sectionId === "contact" &&
+              section.items.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  target={item.href.startsWith("http") ? "_blank" : undefined}
+                  rel="noreferrer"
+                  className="flex items-center justify-between rounded-xl border border-sky-400/15 bg-sky-900/40 p-4 text-sm transition-colors hover:border-sky-400/40 hover:bg-sky-900/60"
+                >
+                  <span className="text-sky-400">{item.name}</span>
+                  <span className="text-sky-100">{item.value} →</span>
+                </a>
+              ))}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
 // === HTML overlay (hero content) ===
 
-function Overlay() {
+function Overlay({ activeSection, onOpen, onClose }) {
   return (
-    <div className="pointer-events-none fixed inset-0 z-10 flex flex-col justify-between p-6 sm:p-10">
-      <header className="flex items-start justify-between">
+    <>
+      <div className="pointer-events-none fixed inset-0 z-10 flex flex-col justify-between p-6 sm:p-10">
+        <header className="flex items-start justify-between">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h1 className="text-lg font-bold tracking-[0.25em] text-sky-100 sm:text-xl">
+              ETHAN OREKAN
+            </h1>
+            <p className="mt-1 text-[10px] tracking-[0.4em] text-sky-400/80 sm:text-xs">
+              PORTFOLIO
+            </p>
+          </motion.div>
+          <motion.nav
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="pointer-events-auto flex gap-3 text-sm text-sky-200/80 sm:gap-8"
+          >
+            {Object.entries(SECTIONS).map(([id, section]) => (
+              <button
+                key={id}
+                onClick={() => onOpen(id)}
+                className={`cursor-pointer transition-colors hover:text-white ${
+                  activeSection === id ? "text-white underline underline-offset-4" : ""
+                }`}
+              >
+                {section.title}
+              </button>
+            ))}
+          </motion.nav>
+        </header>
+
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 1.2, delay: 0.4 }}
+          className="mx-auto max-w-3xl text-center"
         >
-          <h1 className="text-lg font-bold tracking-[0.25em] text-sky-100 sm:text-xl">
-            ETHAN OREKAN
-          </h1>
-          <p className="mt-1 text-[10px] tracking-[0.4em] text-sky-400/80 sm:text-xs">
-            PORTFOLIO
+          <h2 className="text-4xl font-black leading-tight text-white drop-shadow-[0_0_25px_rgba(100,180,255,0.35)] sm:text-6xl">
+            Bienvenue dans
+            <br />
+            mon igloo
+          </h2>
+          <p className="mx-auto mt-5 max-w-xl text-sm text-sky-200/80 sm:text-base">
+            Développeur web — un portfolio sculpté dans la glace,
+            construit avec React, Three.js et beaucoup de neige.
           </p>
         </motion.div>
-        <motion.nav
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="hidden gap-8 text-sm text-sky-200/80 sm:flex"
+
+        <motion.footer
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 1.2 }}
+          className="text-center text-[10px] tracking-[0.35em] text-sky-300/60 sm:text-xs"
         >
-          <a className="transition-colors hover:text-white" href="#competences">Compétences</a>
-          <a className="transition-colors hover:text-white" href="#projets">Projets</a>
-          <a className="transition-colors hover:text-white" href="#contact">Contact</a>
-        </motion.nav>
-      </header>
+          GLISSEZ POUR EXPLORER — CLIQUEZ LES CRISTAUX ET LES PANNEAUX
+        </motion.footer>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1.2, delay: 0.4 }}
-        className="mx-auto max-w-3xl text-center"
-      >
-        <h2 className="text-4xl font-black leading-tight text-white drop-shadow-[0_0_25px_rgba(100,180,255,0.35)] sm:text-6xl">
-          Bienvenue dans
-          <br />
-          mon igloo
-        </h2>
-        <p className="mx-auto mt-5 max-w-xl text-sm text-sky-200/80 sm:text-base">
-          Développeur web — un portfolio sculpté dans la glace,
-          construit avec React, Three.js et beaucoup de neige.
-        </p>
-      </motion.div>
-
-      <motion.footer
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1, delay: 1.2 }}
-        className="text-center text-[10px] tracking-[0.35em] text-sky-300/60 sm:text-xs"
-      >
-        GLISSEZ POUR EXPLORER LA SCÈNE
-      </motion.footer>
-    </div>
+      <SectionPanel sectionId={activeSection} onClose={onClose} />
+    </>
   )
 }
 
 // === Main scene ===
 
 export default function App() {
+  const [activeSection, setActiveSection] = useState(null)
+  const openSection = (id) => setActiveSection(id)
+  const closeSection = () => setActiveSection(null)
+
   return (
     <>
       <Canvas
@@ -280,25 +466,35 @@ export default function App() {
           <meshStandardMaterial color="rgb(240, 245, 255)" roughness={0.5} />
         </mesh>
 
-        {/* Skill crystals */}
+        {/* Skill crystals → clic ouvre "Compétences" */}
         <group position={[-8, 0.5, -6]} rotation={[0, 0.2, 0]}>
           <IceCrystalCluster
             count={40}
             radius={4}
             colors={["#7dd3fc", "#67e8f9", "#a5b4fc"]}
+            onOpen={openSection}
           />
         </group>
 
-        {/* Holographic panels */}
+        {/* Holographic panels → clic ouvre "Projets" */}
         <group position={[6, 1, -4]} rotation={[0, -0.2, 0]}>
-          <HolographicPanels count={6} size={1.8} />
+          <HolographicPanels count={6} size={1.8} onOpen={openSection} />
         </group>
 
         {/* Snow */}
         <SnowField count={350} />
 
-        {/* CTA orb */}
-        <mesh position={[-9, -2.8, 2]}>
+        {/* CTA orb → clic ouvre "Contact" */}
+        <mesh
+          position={[-9, -2.8, 2]}
+          onPointerOver={() => {
+            document.body.style.cursor = "pointer"
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = "auto"
+          }}
+          onClick={() => openSection("contact")}
+        >
           <torusGeometry args={[0.8, 0.2, 32, 64]} />
           <meshStandardMaterial
             color="rgb(110, 210, 255)"
@@ -308,17 +504,9 @@ export default function App() {
           />
         </mesh>
 
-        {/* Sections for scroll transitions */}
-        <group id="hero" />
-        <group id="competences" />
-        <group id="projets" />
-        <group id="experiences" />
-        <group id="formations" />
-        <group id="contact" />
-
         <OrbitControls
           enablePan={false}
-          autoRotate
+          autoRotate={!activeSection}
           autoRotateSpeed={0.4}
           minDistance={7}
           maxDistance={26}
@@ -327,7 +515,11 @@ export default function App() {
         />
       </Canvas>
 
-      <Overlay />
+      <Overlay
+        activeSection={activeSection}
+        onOpen={openSection}
+        onClose={closeSection}
+      />
     </>
   )
 }
