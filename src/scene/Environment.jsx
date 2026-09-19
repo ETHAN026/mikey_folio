@@ -17,7 +17,7 @@ export function Terrain() {
   const geometry = useMemo(() => createTerrainGeometry(420, 150), [])
   return (
     <mesh geometry={geometry} receiveShadow position={[0, -0.02, 0]}>
-      <meshStandardMaterial color="#dfe9f4" roughness={0.97} metalness={0} />
+      <meshStandardMaterial color="#171c22" roughness={0.97} metalness={0} />
     </mesh>
   )
 }
@@ -29,9 +29,9 @@ export function Terrain() {
 export function Ridge() {
   const rings = useMemo(
     () => [
-      { r: 210, h: 46, y: -6, seed: 1, color: "#5d7186" },
-      { r: 260, h: 60, y: -8, seed: 4, color: "#4a5d74" },
-      { r: 310, h: 78, y: -12, seed: 7, color: "#3a4b62" },
+      { r: 210, h: 46, y: -6, seed: 1, color: "#1d242d" },
+      { r: 260, h: 60, y: -8, seed: 4, color: "#161c23" },
+      { r: 310, h: 78, y: -12, seed: 7, color: "#11161c" },
     ],
     []
   )
@@ -71,7 +71,7 @@ export function Ridges() {
         r: 34 + (i % 5) * 10,
         h: 34 + ((i * 7) % 5) * 14,
         seed: i * 3 + 1,
-        color: i % 2 ? "#46586e" : "#51647a",
+        color: i % 2 ? "#181e26" : "#1c232c",
       })
     }
     return list
@@ -119,9 +119,9 @@ export function Moon() {
       <sprite scale={[90, 90, 1]}>
         <spriteMaterial
           map={glow}
-          color="#cfe4ff"
+          color="#aab3bd"
           transparent
-          opacity={0.35}
+          opacity={0.22}
           depthWrite={false}
           fog={false}
           blending={THREE.AdditiveBlending}
@@ -129,7 +129,7 @@ export function Moon() {
       </sprite>
       <mesh>
         <circleGeometry args={[11, 48]} />
-        <meshBasicMaterial color="#eef4ff" transparent opacity={0.9} fog={false} />
+        <meshBasicMaterial color="#c9d2db" transparent opacity={0.75} fog={false} />
       </mesh>
     </group>
   )
@@ -240,9 +240,9 @@ export function GroundMist() {
         <sprite key={i} position={p.pos} scale={[p.scale, p.scale * 0.32, 1]}>
           <spriteMaterial
             map={glow}
-            color="#a9c4de"
+            color="#8b95a1"
             transparent
-            opacity={0.06}
+            opacity={0.05}
             depthWrite={false}
             blending={THREE.AdditiveBlending}
           />

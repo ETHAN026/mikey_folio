@@ -135,7 +135,7 @@ export function createSnowMaterial({ speed = 1, size = 18, wind = 1, opacity = 0
         float d = length(uv);
         float alpha = smoothstep(0.5, 0.08, d) * uOpacity * vTwinkle;
         if (alpha < 0.01) discard;
-        gl_FragColor = vec4(vec3(0.93, 0.96, 1.0), alpha);
+        gl_FragColor = vec4(vec3(0.87, 0.90, 0.93), alpha);
       }
     `,
   })
@@ -163,17 +163,17 @@ export function createSkyMaterial() {
       uniform float uTime;
       void main() {
         float h = normalize(vWorld).y;
-        // dégradé : bleu nuit profond -> bleu d'horizon froid
-        vec3 zenith = vec3(0.012, 0.028, 0.062);
-        vec3 mid    = vec3(0.055, 0.10, 0.18);
-        vec3 horizon = vec3(0.36, 0.47, 0.58);
+        // dégradé monochrome : charbon -> acier désaturé
+        vec3 zenith = vec3(0.016, 0.020, 0.027);
+        vec3 mid    = vec3(0.055, 0.066, 0.080);
+        vec3 horizon = vec3(0.19, 0.21, 0.24);
         vec3 col = mix(mid, zenith, smoothstep(0.06, 0.55, h));
         col = mix(horizon, col, smoothstep(-0.02, 0.14, h));
-        // aurore discrète : voile vertical sinusoïdal, très désaturé
+        // voile vertical quasi monochrome, à peine perceptible
         float band = exp(-pow((h - 0.24) * 5.2, 2.0));
         float curtain = 0.5 + 0.5 * sin(vWorld.x * 0.045 + uTime * 0.05);
         curtain *= 0.6 + 0.4 * sin(vWorld.z * 0.03 - uTime * 0.03);
-        vec3 aurora = vec3(0.28, 0.62, 0.52) * band * curtain * 0.16;
+        vec3 aurora = vec3(0.14, 0.17, 0.19) * band * curtain * 0.10;
         col += aurora;
         gl_FragColor = vec4(col, 1.0);
       }

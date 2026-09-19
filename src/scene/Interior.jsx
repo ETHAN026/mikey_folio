@@ -33,7 +33,7 @@ const ICE_WALL_FRAG = /* glsl */ `
     float fissure = smoothstep(0.4965, 0.5, abs(sin(vUv.x * 26.0 + sin(vUv.y * 3.0 + uTime * 0.05) * 0.6)));
     float pulse = 0.5 + 0.5 * sin(uTime * 0.14 + vUv.y * 5.0);
     vec3 base = uTint * (0.10 + 0.10 * pulse);
-    vec3 col = base + fres * vec3(0.30, 0.44, 0.58) + fissure * vec3(0.05, 0.09, 0.13);
+    vec3 col = base + fres * vec3(0.24, 0.27, 0.31) + fissure * vec3(0.06, 0.07, 0.085);
     gl_FragColor = vec4(col, 0.34 + fres * 0.5);
   }
 `
@@ -108,10 +108,10 @@ const MONO_VERT = /* glsl */ `
 `
 
 const ACCENTS = {
-  dev: "#8fd0ff",
-  systems: "#9db4d6",
-  networks: "#7fe6cf",
-  cloud: "#b9c6f2",
+  dev: "#c9d2db",
+  systems: "#b7bfc9",
+  networks: "#d3dae1",
+  cloud: "#aeb7c2",
 }
 
 function DomainSpace({ domain, position, rotY, active01 }) {
@@ -152,7 +152,7 @@ function DomainSpace({ domain, position, rotY, active01 }) {
       <mesh position={[0, 0, -2.2]} rotation={[0, 0, 0]}>
         <torusGeometry args={[1.25, 0.05, 10, 42, Math.PI]} />
         <meshStandardMaterial
-          color="#bcd8ee"
+          color="#8b95a1"
           emissive={accent}
           emissiveIntensity={0.25}
           roughness={0.3}
@@ -164,11 +164,11 @@ function DomainSpace({ domain, position, rotY, active01 }) {
       {/* montants de l'arche */}
       <mesh position={[-1.25, 0.62, -2.2]}>
         <cylinderGeometry args={[0.045, 0.045, 1.3, 8]} />
-        <meshStandardMaterial color="#bcd8ee" roughness={0.35} metalness={0.4} transparent opacity={0.85} />
+        <meshStandardMaterial color="#8b95a1" roughness={0.35} metalness={0.4} transparent opacity={0.85} />
       </mesh>
       <mesh position={[1.25, 0.62, -2.2]}>
         <cylinderGeometry args={[0.045, 0.045, 1.3, 8]} />
-        <meshStandardMaterial color="#bcd8ee" roughness={0.35} metalness={0.4} transparent opacity={0.85} />
+        <meshStandardMaterial color="#8b95a1" roughness={0.35} metalness={0.4} transparent opacity={0.85} />
       </mesh>
 
       {/* monolithe de glace : le contenu du domaine */}
@@ -246,8 +246,8 @@ function ProjectShard({ project, position, onOpen }) {
       >
         <icosahedronGeometry args={[0.34, 0]} />
         <meshStandardMaterial
-          color="#cfe6f8"
-          emissive="#9fd4ff"
+          color="#aeb7c2"
+          emissive="#8b95a1"
           emissiveIntensity={0.5 + active.current * 0.9}
           transparent
           opacity={0.8}
@@ -259,7 +259,7 @@ function ProjectShard({ project, position, onOpen }) {
       <sprite position={[0, position[1], 0]} scale={[1.4, 1.4, 1]}>
         <spriteMaterial
           map={glow}
-          color="#9fd4ff"
+          color="#8b95a1"
           transparent
           opacity={0.12 + active.current * 0.25}
           depthWrite={false}
@@ -309,7 +309,7 @@ export function IceInterior({ domainActives, onProjectOpen }) {
       <mesh position={[0, 0, -3]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[9, 48]} />
         <meshStandardMaterial
-          color="#d7e7f5"
+          color="#1d232b"
           roughness={0.25}
           metalness={0.1}
           transparent
@@ -320,26 +320,26 @@ export function IceInterior({ domainActives, onProjectOpen }) {
       {/* reflets subtils : disque sombre au centre (ouverture) */}
       <mesh position={[0, 0.012, -3]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[1.7, 40]} />
-        <meshBasicMaterial color="#0a1524" transparent opacity={0.55} />
+        <meshBasicMaterial color="#080b0f" transparent opacity={0.55} />
       </mesh>
 
       {/* brasero central : cœur lumineux de l'igloo */}
       <group position={[0, 0, -3]}>
         <mesh position={[0, 0.25, 0]}>
           <cylinderGeometry args={[0.5, 0.62, 0.5, 24]} />
-          <meshStandardMaterial color="#9db8d2" roughness={0.6} transparent opacity={0.9} />
+          <meshStandardMaterial color="#39424d" roughness={0.6} transparent opacity={0.9} />
         </mesh>
         <pointLight
           position={[0, 0.9, 0]}
-          color="#ffd9a8"
-          intensity={5.5}
+          color="#c9d2db"
+          intensity={3.5}
           distance={13}
           decay={2}
         />
         <sprite position={[0, 0.95, 0]} scale={[1.5, 2.0, 1]}>
           <spriteMaterial
             map={glow}
-            color="#ffd2a0"
+            color="#c9d2db"
             transparent
             opacity={0.22}
             depthWrite={false}

@@ -22,13 +22,13 @@ function ExteriorLights() {
   })
   return (
     <>
-      <ambientLight intensity={0.22} color="#a8c4e2" />
-      <hemisphereLight args={["#8fb5dd", "#1b2a3d", 0.5]} />
+      <ambientLight intensity={0.24} color="#8b95a1" />
+      <hemisphereLight args={["#5a636e", "#10141a", 0.5]} />
       <directionalLight
         ref={moon}
         position={[-60, 45, -80]}
         intensity={1.55}
-        color="#cfe2ff"
+        color="#aab3bd"
       />
     </>
   )
@@ -78,7 +78,7 @@ function World({ progress, mouse }) {
       </group>
 
       <ExteriorLights />
-      <pointLight position={[0, 3.4, -3]} intensity={1.4} color="#b7d4f0" distance={18} decay={2} />
+      <pointLight position={[0, 3.4, -3]} intensity={1.4} color="#aab3bd" distance={18} decay={2} />
 
       <CameraRig progress={progress} mouse={mouse} />
       <DomainDriver progress={progress} domainActives={domainActives} />
@@ -155,7 +155,7 @@ export default function App() {
           camera={{ position: [0, 2.8, 27], fov: 46, near: 0.1, far: 900 }}
           dpr={[1, 2]}
         >
-          <fog attach="fog" args={["#0a0d12", 26, 240]} />
+          <fog attach="fog" args={["#0a0d12", 22, 200]} />
           <color attach="background" args={["#0a0d12"]} />
 
           <World progress={progress} mouse={mouse} />

@@ -336,6 +336,97 @@ function ProjectDossier({ project, onClose }) {
 }
 
 // ------------------------------------------------------------
+// Index projets : grille po-card (comme la référence)
+// ------------------------------------------------------------
+
+function ProjectGrid({ onOpen }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="pointer-events-auto fixed bottom-8 right-8 z-20 border border-[#1a222c] bg-[#0a0d12]/85 px-4 py-2.5 text-[10px] tracking-[0.3em] text-[#9aa3ad] backdrop-blur-sm transition-colors hover:border-[#39424d] hover:text-[#e8edf2]"
+      >
+        PROJETS [{String(PROJECTS.length).padStart(2, "0")}]
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-[#0a0d12]/92 backdrop-blur-sm"
+            onClick={() => setOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 26 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              onClick={(e) => e.stopPropagation()}
+              className="po-panel mx-6 w-full max-w-3xl"
+            >
+              <div className="po-header mb-6 flex items-baseline justify-between">
+                <div>
+                  <p className="po-kicker text-[9px] tracking-[0.5em] text-[#6b7480]">
+                    INDEX — PROJETS SÉLECTIONNÉS
+                  </p>
+                  <p className="po-intro mt-2 text-[11px] text-[#9aa3ad]">
+                    Cliquez une entrée pour ouvrir le dossier.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="po-close text-[10px] tracking-[0.2em] text-[#6b7480] transition-colors hover:text-[#e8edf2]"
+                >
+                  ESC ✕
+                </button>
+              </div>
+
+              <div className="po-grid grid gap-px border border-[#1a222c] bg-[#1a222c] sm:grid-cols-2">
+                {PROJECTS.map((p, i) => (
+                  <button
+                    key={p.id}
+                    onClick={() => {
+                      setOpen(false)
+                      onOpen(p)
+                    }}
+                    className="po-card group bg-[#0c1016] p-5 text-left transition-colors hover:bg-[#11161c]"
+                  >
+                    <div className="po-card-title-row flex items-baseline justify-between">
+                      <span className="text-[9px] tracking-[0.35em] text-[#6b7480]">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className="po-card-arrow text-[#6b7480] transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#e8edf2]">
+                        →
+                      </span>
+                    </div>
+                    <h3 className="mt-4 text-[13px] font-medium tracking-[0.12em] text-[#e8edf2]">
+                      {p.title.toUpperCase()}
+                    </h3>
+                    <p className="po-card-tag mt-1 text-[9px] tracking-[0.25em] text-[#6b7480]">
+                      {p.kind.toUpperCase()}
+                    </p>
+                    <p className="po-card-body mt-3 line-clamp-2 text-[11px] leading-relaxed text-[#9aa3ad]">
+                      {p.context}
+                    </p>
+                    <p className="po-card-url mt-3 text-[9px] tracking-[0.15em] text-[#39424d]">
+                      {p.stack.slice(0, 3).join(" · ").toUpperCase()}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  )
+}
+
+// ------------------------------------------------------------
 // Interface racine
 // ------------------------------------------------------------
 
@@ -366,6 +457,7 @@ export default function Interface({ progress }) {
       <ParcoursPanel chapterId={chapterId} />
       <FormationPanel chapterId={chapterId} />
       <ProjectDossier project={project} onClose={() => setProject(null)} />
+      <ProjectGrid onOpen={setProject} />
       <SceneBridge onOpen={setProject} />
     </>
   )

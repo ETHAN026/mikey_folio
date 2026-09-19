@@ -133,11 +133,11 @@ export function Igloo({ hoverProgress = { current: 0 }, onEnterRequest }) {
         <meshBasicMaterial color="#04070c" />
       </mesh>
 
-      {/* lueur intérieure qui traverse la glace */}
+      {/* lueur intérieure froide qui traverse la glace */}
       <pointLight
         ref={inner}
         position={[0, 1.1, 0]}
-        color="#7ab3d8"
+        color="#b8c2cc"
         intensity={2.1}
         distance={7}
         decay={2}
@@ -147,9 +147,9 @@ export function Igloo({ hoverProgress = { current: 0 }, onEnterRequest }) {
       <sprite position={[0, 3.1, 0]} scale={[3.2, 1.4, 1]}>
         <spriteMaterial
           map={glow}
-          color="#9cc8e8"
+          color="#8b95a1"
           transparent
-          opacity={0.12}
+          opacity={0.1}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />
