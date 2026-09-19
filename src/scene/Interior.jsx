@@ -38,7 +38,7 @@ const ICE_WALL_FRAG = /* glsl */ `
   }
 `
 
-function IceWallMaterial({ tint = "#20364e" }) {
+function useIceWallMaterial(tint = "#20364e") {
   const material = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -276,6 +276,7 @@ function ProjectShard({ project, position, onOpen }) {
 
 export function IceInterior({ domainActives, onProjectOpen }) {
   const glow = useMemo(() => createGlowTexture(), [])
+  const iceWall = useIceWallMaterial("#1c3250")
 
   // actives[i] : ref pilotée par le DomainDriver (fenêtres de scroll)
   const actives = domainActives
@@ -300,9 +301,8 @@ export function IceInterior({ domainActives, onProjectOpen }) {
   return (
     <group>
       {/* parois intérieures : dôme translucide vu de l'intérieur */}
-      <mesh position={[0, 2.2, -3]}>
+      <mesh position={[0, 2.2, -3]} material={iceWall}>
         <sphereGeometry args={[9.5, 48, 32, 0, Math.PI * 2, 0, Math.PI * 0.56]} />
-        <IceWallMaterial tint="#1c3250" />
       </mesh>
 
       {/* sol de glace intérieur */}

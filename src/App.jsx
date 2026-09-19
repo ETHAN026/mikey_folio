@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Canvas, useFrame, useThree } from "@react-three/fiber"
+import { Canvas, useFrame } from "@react-three/fiber"
 import * as THREE from "three"
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing"
 import { Terrain, Ridges, Sky, Moon, SnowLayers, GroundMist } from "./scene/Environment"
@@ -40,7 +40,6 @@ function ExteriorLights() {
 // ============================================================
 
 function World({ progress, mouse }) {
-  const { scene } = useThree()
   const domainActives = useRef([{ current: 0 }, { current: 0 }, { current: 0 }, { current: 0 }])
   const iglooHover = useRef(0)
   const exterior = useRef()
@@ -48,16 +47,11 @@ function World({ progress, mouse }) {
 
   useFrame(() => {
     const p = THREE.MathUtils.clamp(progress.current, 0, 1)
-    // fondu croisé : extérieur disparaît pendant la traversée (0.62 -> 0.78)
+    // fondu croisé : extérieur visible avant la traversée, intérieur après
     const fadeOut = 1 - THREE.MathUtils.smoothstep(p, 0.6, 0.78)
     const fadeIn = THREE.MathUtils.smoothstep(p, 0.68, 0.85)
     if (exterior.current) exterior.current.visible = fadeOut > 0.01
     if (interior.current) interior.current.visible = fadeIn > 0.01
-    scene.traverse((o) => {
-      if (o.userData?.exterior && o.material) {
-        o.material.opacity = undefined // placeholder: matériaux gérés par layer
-      }
-    })
   })
 
   return (
