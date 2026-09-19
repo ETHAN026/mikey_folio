@@ -1,49 +1,182 @@
-import { useEffect, useRef } from "react"
-import { Canvas } from "@react-three/fiber"
+import { useMemo, useRef } from "react"
+import { Canvas, useFrame } from "@react-three/fiber"
 import { OrbitControls } from "@react-three/drei"
 import { motion } from "framer-motion"
+
+// === Snow particle field (animated) ===
+
+function SnowField({ count = 350 }) {
+  const ref = useRef()
+
+  // Positions & speeds are memoized so they survive StrictMode re-renders
+  const particles = useMemo(() => {
+    const positions = new Float32Array(count * 3)
+    const speeds = new Float32Array(count)
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 40
+      positions[i * 3 + 1] = Math.random() * 20 + 10
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 40
+      speeds[i] = 0.03 + Math.random() * 0.05
+    }
+    return { positions, speeds }
+  }, [count])
+
+  useFrame(() => {
+    const positions = ref.current.geometry.attributes.position.array
+    for (let i = 0; i < count; i++) {
+      positions[i * 3 + 1] -= particles.speeds[i]
+      // Reset to the top once a flake reaches the ground
+      if (positions[i * 3 + 1] < -4) {
+        positions[i * 3 + 1] = 20 + Math.random() * 5
+      }
+    }
+    ref.current.geometry.attributes.position.needsUpdate = true
+  })
+
+  return (
+    <points ref={ref}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          args={[particles.positions, 3]}
+        />
+      </bufferGeometry>
+      <pointsMaterial
+        color="rgb(255, 255, 255)"
+        size={0.15}
+        transparent
+        opacity={0.8}
+        sizeAttenuation
+      />
+    </points>
+  )
+}
+
+// === Ice crystal cluster (decorative) ===
+
+function IceCrystalCluster({ count = 40, radius = 4, colors }) {
+  const crystals = useMemo(
+    () =>
+      Array.from({ length: count }, (_, i) => ({
+        key: i,
+        position: [
+          Math.random() * radius - radius / 2,
+          Math.random() * radius * 0.5,
+          Math.random() * radius - radius / 2,
+        ],
+        size: 0.3 + Math.random() * 0.7,
+        rotation: [
+          Math.random() * Math.PI,
+          Math.random() * Math.PI,
+          Math.random() * Math.PI,
+        ],
+        color: colors[i % colors.length],
+      })),
+    [count, radius, colors]
+  )
+
+  return (
+    <group>
+      {crystals.map((c) => (
+        <mesh key={c.key} position={c.position} rotation={c.rotation} scale={c.size}>
+          <icosahedronGeometry args={[1, 0]} />
+          <meshStandardMaterial
+            color={c.color}
+            transparent
+            opacity={0.85}
+            wireframe
+            metalness={0.3}
+            roughness={0.4}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+// === Holographic panels (decorative) ===
+
+function HolographicPanels({ count = 6, size = 1.8 }) {
+  const ref = useRef()
+
+  useFrame((state) => {
+    ref.current.children.forEach((panel, i) => {
+      panel.rotation.y += 0.002 * (i % 2 === 0 ? 1 : -1)
+      panel.position.y += Math.sin(state.clock.elapsedTime + i) * 0.002
+    })
+  })
+
+  const panels = useMemo(
+    () =>
+      Array.from({ length: count }, (_, i) => ({
+        key: i,
+        position: [
+          (Math.random() - 0.5) * 5,
+          0.5 + Math.random() * 3,
+          (Math.random() - 0.5) * 5,
+        ],
+        rotation: [
+          Math.random() * Math.PI,
+          Math.random() * Math.PI,
+          Math.random() * Math.PI,
+        ],
+        scale: 0.6 + Math.random() * 0.8,
+      })),
+    [count]
+  )
+
+  return (
+    <group ref={ref}>
+      {panels.map((p) => (
+        <mesh key={p.key} position={p.position} rotation={p.rotation} scale={p.scale}>
+          <boxGeometry args={[size, 0.3, size]} />
+          <meshStandardMaterial
+            color="rgb(200, 230, 255)"
+            transparent
+            opacity={0.55}
+            metalness={0.8}
+            roughness={0.1}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+// === Main scene ===
 
 export default function App() {
   return (
     <Canvas
       gl={{ antialias: true, alpha: true }}
       camera={{ position: [0, 0, 18], fov: 55 }}
-      controls={OrbitControls}
-      resize
-      pixelRatio={Math.min(window.devicePixelRatio, 2)}
-      shadows
+      dpr={Math.min(window.devicePixelRatio, 2)}
+      style={{ position: "fixed", inset: 0 }}
     >
-      <fog near={0.003} far={20} color="rgb(245, 250, 255)" />
+      <fog attach="fog" near={20} far={60} color="rgb(245, 250, 255)" />
 
       {/* Snowy ground */}
-      <mesh>
+      <mesh position={[0, -4, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[100, 100]} />
-        <meshStandardMaterial
-          color="rgb(248, 250, 255)"
-          transparent
-          opacity={0.96}
-        />
-        <position y={-4} />
-        <rotation x={-Math.PI / 2} />
+        <meshStandardMaterial color="rgb(248, 250, 255)" transparent opacity={0.96} />
       </mesh>
 
       {/* Distant mountains */}
-      <group rotation={[-0.15, 0, 0]} position={[-10, 0, -20]}>
+      <group rotation={[-0.15, 0, 0]} position={[-10, -1, -20]}>
         <mesh>
           <boxGeometry args={[15, 2.5, 15]} />
           <meshStandardMaterial color="rgb(225, 232, 242)" flatShading />
         </mesh>
       </group>
-      <group rotation={[-0.15, 0, 0]} position={[10, 0, -22]}>
+      <group rotation={[-0.15, 0, 0]} position={[10, -1.2, -22]}>
         <mesh>
           <boxGeometry args={[12, 2.8, 12]} />
-          <meshStandardMaterial color="rgb(225, 232, 242)" flatShading />
         </mesh>
       </group>
 
-      {/* Main igloo */}
+      {/* Main igloo dome (BackSide so the camera sits inside) */}
       <mesh position={[0, -0.8, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <icoGeometry args={[5, 1]} />
+        <icosahedronGeometry args={[5, 1]} />
         <meshStandardMaterial
           color="rgb(255, 255, 255)"
           transparent
@@ -52,9 +185,9 @@ export default function App() {
         />
       </mesh>
 
-      {/* Igloo texture */}
+      {/* Igloo wireframe texture */}
       <mesh position={[0, -0.8, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <icoGeometry args={[5.3, 1]} />
+        <icosahedronGeometry args={[5.3, 1]} />
         <meshStandardMaterial
           color="rgb(242, 248, 255)"
           transparent
@@ -65,23 +198,28 @@ export default function App() {
         />
       </mesh>
 
-      {/* Entrance */}
+      {/* Entrance torus */}
       <mesh position={[0, -1.3, 0]} rotation={[0, Math.PI, 0]}>
         <torusGeometry args={[2.5, 0.6, 16, 32]} />
-        <meshStandardMaterial
-          color="rgb(240, 245, 255)"
-          transparent
-          opacity={0.97}
-        />
+        <meshStandardMaterial color="rgb(240, 245, 255)" transparent opacity={0.97} />
       </mesh>
 
-      {/* Interior light */}
+      {/* Lights */}
       <ambientLight color="rgb(140, 220, 255)" intensity={0.35} />
-      <pointLight position={[0, 2, 0]} intensity={1.1} color="rgb(150, 230, 255)" distance={20} />
+      <pointLight
+        position={[0, 2, 0]}
+        intensity={1.1}
+        color="rgb(150, 230, 255)"
+        distance={20}
+      />
 
       {/* Skill crystals */}
       <group position={[-8, 1, -5]} rotation={[0, 0.2, 0]}>
-        <IceCrystalCluster count={40} radius={4} colors={["hsl(210,80%,65%)", "hsl(180,70%,60%)", "hsl(160,75%,55%)"]} />
+        <IceCrystalCluster
+          count={40}
+          radius={4}
+          colors={["hsl(210,80%,65%)", "hsl(180,70%,60%)", "hsl(160,75%,55%)"]}
+        />
       </group>
 
       {/* Holographic panels */}
@@ -89,8 +227,8 @@ export default function App() {
         <HolographicPanels count={6} size={1.8} />
       </group>
 
-      {/* Snow field */}
-      <SnowField particleCount={350} sizeRange={[0.1, 0.6]} downSpeed={[0.03, 0.08]} />
+      {/* Snow */}
+      <SnowField count={350} />
 
       {/* CTA orb */}
       <mesh position={[-9, -4, 0]}>
@@ -110,116 +248,8 @@ export default function App() {
       <group id="experiences" position={[0, 0, 0]} />
       <group id="formations" position={[0, 0, 0]} />
       <group id="contact" position={[0, 0, 0]} />
+
+      <OrbitControls enablePan={false} minDistance={8} maxDistance={30} />
     </Canvas>
   )
-}
-
-// === Sub-components ===
-
-const IceCrystal = ({ size, position, color }) => ({
-  position: position,
-  scale: size,
-  geometry: "icosahedron",
-  material: {
-    color: color,
-    transparent: true,
-    opacity: 0.85,
-    wireframe: true,
-    metalness: 0.3,
-    roughness: 0.4,
-  },
-  rotation: [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI],
-})
-
-const IceCrystalCluster = ({ count, radius, colors }) => {
-  const crystals = Array.from({ length: count }, (_, i) => ({
-    key: i,
-    position: [
-      Math.random() * radius - radius / 2,
-      Math.random() * radius * 0.5,
-      Math.random() * radius - radius / 2,
-    ],
-    size: 0.3 + Math.random() * 0.7,
-    color: colors[i % colors.length],
-  }))
-
-  return {
-    children: crystals.map((c, i) => ({
-      key: i,
-      ...IceCrystal({
-        size: c.size,
-        position: c.position,
-        color: c.color,
-      }),
-    })),
-  }
-}
-
-const HolographicPanels = ({ count, size }) => {
-  const panels = Array.from({ length: count }, (_, i) => ({
-    key: i,
-    position: [
-      (Math.random() - 0.5) * 5,
-      0.5 + Math.random() * 3,
-      (Math.random() - 0.5) * 5,
-    ],
-    rotation: [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI],
-    scale: 0.6 + Math.random() * 0.8,
-  }))
-
-  return {
-    children: panels.map((p, i) => ({
-      key: i,
-      ...HolographicPanel({ position: p.position, rotation: p.rotation, scale: p.scale }),
-    })),
-  }
-}
-
-const HolographicPanel = ({ position, rotation, scale }) => ({
-  position: position,
-  rotation: rotation,
-  scale: scale,
-  children: (
-    <mesh
-      boxGeometry args={[size, 0.3, size]}
-      material={{
-        color: "rgb(200, 230, 255)",
-        transparent: true,
-        opacity: 0.55,
-        metalness: 0.8,
-        roughness: 0.1,
-      }}
-      rotation={rotation}
-      scale={scale}
-    />
-  ),
-})
-
-const SnowField = ({ particleCount, sizeRange, downSpeed }) => {
-  const sizes = Array.from({ length: particleCount }, () =>
-    Math.random() * (sizeRange[1] - sizeRange[0]) + sizeRange[0]
-  )
-  const startY = Array.from({ length: particleCount }, () =>
-    Math.random() * 20 + 10
-  )
-  const startX = Array.from({ length: particleCount }, () =>
-    (Math.random() - 0.5) * 40
-  )
-  const startZ = Array.from({ length: particleCount }, () =>
-    (Math.random() - 0.5) * 40
-  )
-
-  return {
-    children: Array.from({ length: particleCount }).map((_, i) => ({
-      key: i,
-      position: [startX[i], startY[i], startZ[i]],
-      size: sizes[i],
-    })),
-    args: [[startX, startY, startZ], [sizes]],
-    material: {
-      transparent: true,
-      opacity: 0.25,
-      sizeAttenuation: true,
-    },
-  }
 }

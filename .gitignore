@@ -18,3 +18,9 @@ yarn-error.log*
 # Env files
 .env
 .env.*
+
+# Docs personnels
+*.pdf
+
+# Backups locaux
+.git.corrupt.bak
