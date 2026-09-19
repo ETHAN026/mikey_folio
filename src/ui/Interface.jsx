@@ -12,8 +12,6 @@ import {
   CERTIFICATIONS,
 } from "../data/cv"
 
-const SERIF = "'Cormorant Garamond', Georgia, 'Times New Roman', serif"
-
 // ------------------------------------------------------------
 // Utilitaires de progression
 // ------------------------------------------------------------
@@ -29,36 +27,29 @@ function domainAt(p) {
 }
 
 // ------------------------------------------------------------
-// Typo de chapitre (coin bas-gauche)
+// Caption de chapitre (coin bas-gauche, style index technique)
 // ------------------------------------------------------------
 
 function ChapterCaption({ progress }) {
-  const [tick, setTick] = useState(0)
+  const [pct, setPct] = useState(0)
   useEffect(() => {
-    const i = setInterval(() => setTick((t) => t + 1), 120)
+    const i = setInterval(() => setPct(progress.current), 100)
     return () => clearInterval(i)
-  }, [])
-  void tick
-  const chapter = CHAPTERS[Math.min(chapterAt(progress.current), CHAPTERS.length - 1)]
+  }, [progress])
+  const chapter = CHAPTERS[Math.min(chapterAt(pct), CHAPTERS.length - 1)]
   return (
-    <div className="pointer-events-none fixed bottom-10 left-10 z-20">
+    <div className="pointer-events-none fixed bottom-8 left-8 z-20 sm:left-12">
       <AnimatePresence mode="wait">
         <motion.div
           key={chapter.id}
-          initial={{ opacity: 0, y: 14 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -14 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          exit={{ opacity: 0, y: -12 }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div
-            className="mb-2 text-[10px] tracking-[0.45em] text-sky-100/50"
-          >
-            CHAPITRE {String(chapter.id + 1).padStart(2, "0")} — {chapter.label}
+          <div className="text-[10px] tracking-[0.35em] text-[#6b7480]">
+            [{String(chapter.id + 1).padStart(2, "0")}] {chapter.label}
           </div>
-          <div
-            className="h-px w-16 bg-gradient-to-r from-sky-200/40 to-transparent"
-            style={{ backgroundColor: "transparent" }}
-          />
         </motion.div>
       </AnimatePresence>
     </div>
@@ -66,44 +57,35 @@ function ChapterCaption({ progress }) {
 }
 
 // ------------------------------------------------------------
-// Carte domaine (bas-droite, pendant la traversée intérieure)
+// Bandeau domaine (bas, pendant la traversée intérieure)
 // ------------------------------------------------------------
 
-function DomainCard({ domain }) {
+function DomainStrip({ domain }) {
   return (
     <AnimatePresence mode="wait">
       {domain && (
         <motion.div
           key={domain.id}
-          initial={{ opacity: 0, y: 30, filter: "blur(6px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          exit={{ opacity: 0, y: -20, filter: "blur(6px)" }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="pointer-events-none fixed bottom-10 right-10 z-20 max-w-sm"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -16 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="pointer-events-none fixed bottom-8 left-1/2 z-20 w-[min(92vw,620px)] -translate-x-1/2"
         >
-          <div className="mb-3 flex items-baseline gap-4">
-            <span
-              className="text-4xl font-light text-sky-100/25"
-              style={{ fontFamily: SERIF }}
-            >
-              {domain.index}
-            </span>
-            <h3 className="text-xl font-light tracking-[0.28em] text-sky-50">
-              {domain.title}
-            </h3>
-          </div>
-          <p className="mb-3 text-xs leading-relaxed text-sky-100/60">
-            {domain.caption}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {domain.stack.map((s) => (
-              <span
-                key={s}
-                className="border border-sky-100/15 bg-sky-950/30 px-2.5 py-1 text-[10px] tracking-wider text-sky-100/70 backdrop-blur-sm"
-              >
-                {s}
+          <div className="border border-[#1a222c] bg-[#0a0d12]/85 px-5 py-4 backdrop-blur-sm">
+            <div className="flex items-baseline justify-between">
+              <span className="text-[10px] tracking-[0.4em] text-[#6b7480]">
+                {domain.index} / {domain.title}
               </span>
-            ))}
+              <span className="text-[10px] text-[#9aa3ad]">{domain.caption}</span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+              {domain.stack.map((s) => (
+                <span key={s} className="text-[11px] text-[#c9d2db]">
+                  {s}
+                </span>
+              ))}
+            </div>
           </div>
         </motion.div>
       )}
@@ -112,137 +94,30 @@ function DomainCard({ domain }) {
 }
 
 // ------------------------------------------------------------
-// Parcours : expériences professionnelles (chapitres 3-4)
-// ------------------------------------------------------------
-
-function ParcoursPanel({ chapterId }) {
-  const visible = chapterId === 2 || chapterId === 3
-  return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -30 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="pointer-events-none fixed left-10 top-1/2 z-20 hidden w-72 -translate-y-1/2 md:block"
-        >
-          <p className="mb-4 text-[9px] tracking-[0.5em] text-sky-100/40">
-            EXPÉRIENCES
-          </p>
-          <div className="space-y-4">
-            {EXPERIENCES.map((e) => (
-              <div key={`${e.period}-${e.place}`} className="border-l border-sky-100/15 pl-4">
-                <p className="text-[9px] tracking-[0.3em] text-sky-200/45">
-                  {e.period}
-                </p>
-                <p
-                  className="mt-0.5 text-base font-light text-sky-50/90"
-                  style={{ fontFamily: SERIF }}
-                >
-                  {e.title}
-                </p>
-                <p className="text-[10px] tracking-[0.15em] text-sky-100/50">
-                  {e.place}
-                </p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  )
-}
-
-// ------------------------------------------------------------
-// Formations + certifications (chapitre 4 — le seuil)
-// ------------------------------------------------------------
-
-function FormationPanel({ chapterId }) {
-  const visible = chapterId === 3
-  return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          initial={{ opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 30 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="pointer-events-none fixed right-24 top-1/2 z-20 hidden w-64 -translate-y-1/2 md:block"
-        >
-          <p className="mb-4 text-[9px] tracking-[0.5em] text-sky-100/40">
-            FORMATIONS
-          </p>
-          <div className="space-y-3">
-            {FORMATIONS.map((f) => (
-              <div key={f.title}>
-                <p className="text-[9px] tracking-[0.3em] text-sky-200/45">{f.period}</p>
-                <p
-                  className="text-sm font-light leading-snug text-sky-50/90"
-                  style={{ fontFamily: SERIF }}
-                >
-                  {f.title}
-                </p>
-                <p className="text-[10px] tracking-[0.15em] text-sky-100/50">{f.place}</p>
-              </div>
-            ))}
-          </div>
-          <p className="mb-3 mt-7 text-[9px] tracking-[0.5em] text-sky-100/40">
-            CERTIFICATIONS
-          </p>
-          <div className="space-y-1.5">
-            {CERTIFICATIONS.map((c) => (
-              <p key={c} className="text-[10px] leading-relaxed text-sky-100/60">
-                — {c}
-              </p>
-            ))}
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  )
-}
-
-// ------------------------------------------------------------
-// Header contact + rail de progression
+// Top bar : identité + liens techniques
 // ------------------------------------------------------------
 
 function TopBar() {
   return (
     <>
       <motion.header
-        initial={{ opacity: 0, y: -16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1.2, delay: 0.4 }}
-        className="pointer-events-auto fixed left-0 right-0 top-0 z-30 flex items-center justify-between px-8 py-6 sm:px-12"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.2, delay: 0.3 }}
+        className="pointer-events-auto fixed left-0 right-0 top-0 z-30 flex items-center justify-between px-8 py-5 sm:px-12"
       >
-        <div className="flex items-baseline gap-3">
-          <span
-            className="text-lg tracking-[0.35em] text-sky-50"
-            style={{ fontFamily: SERIF }}
-          >
-            E.
-          </span>
-          <span className="text-[9px] tracking-[0.4em] text-sky-100/45">
-            OREKAN
-          </span>
+        <div className="flex items-baseline gap-2 text-[11px] tracking-[0.3em]">
+          <span className="text-[#e8edf2]">ETHAN_OREKAN</span>
+          <span className="po-blink text-[#6b7480]">_</span>
         </div>
-        <div className="flex items-center gap-6">
-          <a
-            href={IDENTITY.github}
-            target="_blank"
-            rel="noreferrer"
-            className="text-[10px] tracking-[0.3em] text-sky-100/55 transition-colors hover:text-sky-50"
-          >
+        <nav className="flex items-center gap-5 text-[10px] tracking-[0.25em]">
+          <a href={IDENTITY.github} target="_blank" rel="noreferrer" className="po-link">
             GITHUB
           </a>
-          <a
-            href={`mailto:${IDENTITY.email}`}
-            className="border border-sky-100/20 px-4 py-2 text-[10px] tracking-[0.3em] text-sky-100/80 transition-all hover:border-sky-100/50 hover:text-white"
-          >
-            CONTACT
+          <a href={`mailto:${IDENTITY.email}`} className="po-link">
+            {IDENTITY.email.toUpperCase()}
           </a>
-        </div>
+        </nav>
       </motion.header>
 
       <ScrollRail />
@@ -263,17 +138,13 @@ function ScrollRail() {
   }, [])
   return (
     <div className="pointer-events-none fixed right-8 top-1/2 z-20 hidden -translate-y-1/2 sm:block">
-      <div className="relative h-40 w-px bg-sky-100/15">
-        <motion.div
-          className="absolute left-0 top-0 w-px bg-sky-100/70"
+      <div className="relative h-36 w-px bg-[#1a222c]">
+        <div
+          className="absolute left-0 top-0 w-px bg-[#9aa3ad] transition-[height] duration-150"
           style={{ height: `${pct * 100}%` }}
         />
-        <div
-          className="absolute -left-[3px] h-[7px] w-[7px] rounded-full bg-sky-50 shadow-[0_0_12px_rgba(160,210,255,0.9)]"
-          style={{ top: `calc(${pct * 100}% - 3px)` }}
-        />
       </div>
-      <div className="mt-3 text-center text-[9px] tracking-[0.3em] text-sky-100/40">
+      <div className="mt-2 text-center text-[9px] text-[#6b7480]">
         {String(Math.round(pct * 100)).padStart(2, "0")}
       </div>
     </div>
@@ -281,58 +152,122 @@ function ScrollRail() {
 }
 
 // ------------------------------------------------------------
-// Hero
+// Hero : bloc titre mono, minimal
 // ------------------------------------------------------------
 
 function Hero() {
   const [faded, setFaded] = useState(false)
   useEffect(() => {
-    const onScroll = () => setFaded(window.scrollY > window.innerHeight * 0.14)
+    const onScroll = () => setFaded(window.scrollY > window.innerHeight * 0.1)
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
   return (
     <motion.div
-      animate={{ opacity: faded ? 0 : 1, y: faded ? -30 : 0 }}
-      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+      animate={{ opacity: faded ? 0 : 1, y: faded ? -24 : 0 }}
+      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       className="pointer-events-none fixed inset-0 z-10 flex flex-col items-center justify-center"
     >
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1.6, delay: 0.8 }}
-        className="mb-6 text-[10px] tracking-[0.55em] text-sky-100/55"
-      >
-        {IDENTITY.role}
-      </motion.p>
-      <h1
-        className="text-center text-5xl font-extralight leading-[1.05] tracking-[0.12em] text-sky-50 sm:text-7xl"
-        style={{ fontFamily: SERIF }}
-      >
-        ETHAN
-        <span className="mx-3 inline-block h-8 w-px self-center bg-sky-100/30 align-middle sm:h-10" />
-        OREKAN
-      </h1>
       <motion.div
-        initial={{ scaleX: 0 }}
-        animate={{ scaleX: 1 }}
-        transition={{ duration: 1.4, delay: 1.4, ease: [0.22, 1, 0.36, 1] }}
-        className="mt-8 h-px w-40 bg-gradient-to-r from-transparent via-sky-100/50 to-transparent"
-      />
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.9, delay: 0.5 }}
+        className="border border-[#1a222c] bg-[#0a0d12]/70 px-8 py-7 backdrop-blur-sm sm:px-12"
+      >
+        <p className="mb-3 text-[10px] tracking-[0.45em] text-[#6b7480]">
+          {IDENTITY.role}
+        </p>
+        <h1 className="text-2xl font-medium tracking-[0.18em] text-[#e8edf2] sm:text-3xl">
+          ETHAN OREKAN
+        </h1>
+        <p className="mt-3 max-w-md text-[11px] leading-relaxed text-[#9aa3ad]">
+          {PROFILE}
+        </p>
+      </motion.div>
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 1.2, delay: 1.8 }}
-        className="mt-8 text-[10px] tracking-[0.4em] text-sky-100/40"
+        transition={{ duration: 1, delay: 1.6 }}
+        className="mt-8 text-[10px] tracking-[0.4em] text-[#6b7480]"
       >
-        DÉFILEZ POUR ENTRER
+        DÉFILEZ POUR ENTRER<span className="po-blink">_</span>
       </motion.p>
     </motion.div>
   )
 }
 
 // ------------------------------------------------------------
-// Dossier projet (interface éditoriale plein écran)
+// Panneaux parcours / formations (chapitres intermédiaires)
+// ------------------------------------------------------------
+
+function ParcoursPanel({ chapterId }) {
+  const visible = chapterId === 2 || chapterId === 3
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.aside
+          initial={{ opacity: 0, x: -24 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -24 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="pointer-events-none fixed left-8 top-1/2 z-20 hidden w-72 -translate-y-1/2 md:block"
+        >
+          <p className="mb-4 text-[9px] tracking-[0.45em] text-[#6b7480]">EXPÉRIENCES</p>
+          <div className="space-y-4">
+            {EXPERIENCES.map((e) => (
+              <div key={`${e.period}-${e.place}`} className="border-l border-[#1a222c] pl-4">
+                <p className="text-[9px] tracking-[0.25em] text-[#6b7480]">{e.period}</p>
+                <p className="mt-0.5 text-[12px] text-[#e8edf2]">{e.title}</p>
+                <p className="text-[10px] text-[#9aa3ad]">{e.place}</p>
+              </div>
+            ))}
+          </div>
+        </motion.aside>
+      )}
+    </AnimatePresence>
+  )
+}
+
+function FormationPanel({ chapterId }) {
+  const visible = chapterId === 3
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.aside
+          initial={{ opacity: 0, x: 24 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 24 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="pointer-events-none fixed right-20 top-1/2 z-20 hidden w-64 -translate-y-1/2 md:block"
+        >
+          <p className="mb-4 text-[9px] tracking-[0.45em] text-[#6b7480]">FORMATIONS</p>
+          <div className="space-y-3">
+            {FORMATIONS.map((f) => (
+              <div key={f.title}>
+                <p className="text-[9px] tracking-[0.25em] text-[#6b7480]">{f.period}</p>
+                <p className="text-[12px] leading-snug text-[#e8edf2]">{f.title}</p>
+                <p className="text-[10px] text-[#9aa3ad]">{f.place}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mb-2 mt-6 text-[9px] tracking-[0.45em] text-[#6b7480]">
+            CERTIFICATIONS
+          </p>
+          <div className="space-y-1">
+            {CERTIFICATIONS.map((c) => (
+              <p key={c} className="text-[10px] text-[#9aa3ad]">
+                — {c}
+              </p>
+            ))}
+          </div>
+        </motion.aside>
+      )}
+    </AnimatePresence>
+  )
+}
+
+// ------------------------------------------------------------
+// Dossier projet : carte éditoriale (po-card)
 // ------------------------------------------------------------
 
 function ProjectDossier({ project, onClose }) {
@@ -349,55 +284,46 @@ function ProjectDossier({ project, onClose }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.4 }}
-          className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-[#050b14]/80 backdrop-blur-md"
+          transition={{ duration: 0.3 }}
+          className="po-backdrop pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-[#0a0d12]/85 backdrop-blur-sm"
           onClick={onClose}
         >
           <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 40, scale: 0.98 }}
-            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 24 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="relative mx-6 max-w-2xl border border-sky-100/12 bg-gradient-to-b from-[#0b1626]/95 to-[#070e1a]/95 p-10 sm:p-14"
+            className="po-card relative mx-6 w-full max-w-xl border border-[#1a222c] bg-[#0c1016] p-8 sm:p-10"
           >
-            <div className="absolute left-0 top-0 h-full w-px bg-gradient-to-b from-sky-300/40 via-sky-300/10 to-transparent" />
-            <button
-              onClick={onClose}
-              aria-label="Fermer"
-              className="absolute right-6 top-6 text-sm tracking-[0.2em] text-sky-100/50 transition-colors hover:text-white"
-            >
-              ESC ✕
-            </button>
-
-            <p className="mb-3 text-[10px] tracking-[0.5em] text-sky-200/50">
-              {project.kind.toUpperCase()}
-            </p>
-            <h2
-              className="text-4xl font-light tracking-wide text-white"
-              style={{ fontFamily: SERIF }}
-            >
+            <div className="po-card-title-row mb-5 flex items-baseline justify-between">
+              <span className="text-[9px] tracking-[0.45em] text-[#6b7480]">
+                {project.kind.toUpperCase()}
+              </span>
+              <button
+                onClick={onClose}
+                className="text-[10px] tracking-[0.2em] text-[#6b7480] transition-colors hover:text-[#e8edf2]"
+              >
+                ESC ✕
+              </button>
+            </div>
+            <h2 className="text-xl font-medium tracking-[0.12em] text-[#e8edf2]">
               {project.title}
             </h2>
-            <div className="mt-6 h-px w-24 bg-sky-200/30" />
-            <p className="mt-6 text-sm leading-loose text-sky-100/75">
+            <div className="mt-4 h-px w-14 bg-[#1a222c]" />
+            <p className="mt-5 text-[12px] leading-relaxed text-[#c9d2db]">
               {project.context}
             </p>
-            <div className="mt-8 flex flex-wrap gap-2">
+            <div className="mt-7 flex flex-wrap gap-x-4 gap-y-1.5">
               {project.stack.map((s) => (
-                <span
-                  key={s}
-                  className="border border-sky-100/15 px-3 py-1.5 text-[10px] tracking-[0.15em] text-sky-100/65"
-                >
+                <span key={s} className="text-[10px] tracking-[0.1em] text-[#9aa3ad]">
                   {s}
                 </span>
               ))}
             </div>
-            <div className="mt-10 flex items-center justify-between border-t border-sky-100/10 pt-5">
-              <span className="text-[9px] tracking-[0.4em] text-sky-100/35">
-                ETHAN OREKAN — PROJET
-              </span>
-              <span className="text-[9px] tracking-[0.4em] text-sky-100/35">
+            <div className="mt-8 flex items-center justify-between border-t border-[#1a222c] pt-4 text-[9px] tracking-[0.35em] text-[#6b7480]">
+              <span>ETHAN OREKAN</span>
+              <span>
                 {String(PROJECTS.indexOf(project) + 1).padStart(2, "0")} /{" "}
                 {String(PROJECTS.length).padStart(2, "0")}
               </span>
@@ -430,47 +356,22 @@ export default function Interface({ progress }) {
   }, [progress])
 
   const domain = DOMAINS.find((d) => d.id === domainId)
-  const showProfile = chapterId >= 4
 
   return (
     <>
       <TopBar />
       <Hero />
       <ChapterCaption progress={progress} />
-      <DomainCard domain={domain} />
+      <DomainStrip domain={domain} />
       <ParcoursPanel chapterId={chapterId} />
       <FormationPanel chapterId={chapterId} />
-
-      {/* citation de profil pendant le sanctuaire */}
-      <AnimatePresence>
-        {showProfile && (
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 24 }}
-            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-            className="pointer-events-none fixed left-1/2 top-24 z-20 w-[min(92vw,640px)] -translate-x-1/2 text-center"
-          >
-            <p
-              className="text-lg font-light italic leading-relaxed text-sky-50/85 sm:text-xl"
-              style={{ fontFamily: SERIF }}
-            >
-              « {PROFILE} »
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <ProjectDossier project={project} onClose={() => setProject(null)} />
-
-      {/* pont : la scène passe l'ouverture de dossier */}
       <SceneBridge onOpen={setProject} />
     </>
   )
 }
 
-// petit composant interne pour recevoir les événements d'ouverture
-// déclenchés depuis la 3D sans prop-drilling
+// pont : la scène 3D déclenche l'ouverture des dossiers
 let openDossierHandler = null
 export function registerDossierOpener(fn) {
   openDossierHandler = fn
